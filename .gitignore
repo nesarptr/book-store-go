@@ -15,7 +15,7 @@
 # vendor/
 
 .vscode/
-
+tmp/
 
 # dotenv environment variables file
 .env
