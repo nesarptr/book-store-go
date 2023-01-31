@@ -9,5 +9,6 @@ type CartItem struct {
 	BookID   uint `json:"bookId"`
 	CartID   uint `json:"cartId"`
 	Book     Book `json:"book"`
+	Cart     Cart `json:"cart"`
 	Quantity int  `json:"quantity"`
 }
