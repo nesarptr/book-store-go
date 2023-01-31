@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/helmet/v2"
 	"github.com/nesarptr/book-store-go/config"
 	"github.com/nesarptr/book-store-go/models"
+	"github.com/nesarptr/book-store-go/routes"
 )
 
 func main() {
@@ -20,6 +21,8 @@ func main() {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")
 	})
+
+	routes.SetUpRoutes(app)
 
 	log.Fatal(app.Listen(":3000"))
 }
