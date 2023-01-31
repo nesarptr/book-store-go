@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/helmet/v2"
 	"github.com/nesarptr/book-store-go/config"
+	"github.com/nesarptr/book-store-go/models"
 )
 
 func main() {
@@ -28,5 +29,7 @@ func init() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	db := config.GetDB()
+	db.AutoMigrate(&models.User{}, &models.Book{}, &models.Order{}, &models.Cart{}, &models.CartItem{}, &models.OrderItem{})
 	fmt.Println("Database successfully connected!")
 }
