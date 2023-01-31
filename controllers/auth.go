@@ -27,5 +27,8 @@ func SignUp(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(user)
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"userId":    user.ID,
+		"userEmail": user.Email,
+	})
 }
