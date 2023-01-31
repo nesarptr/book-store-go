@@ -7,7 +7,7 @@ type Order struct {
 	TotalPrice float64     `json:"totalPrice"`
 	Books      []OrderItem `json:"books"`
 	UserID     uint        `json:"userId"`
-	Owner      User        `json:"owner"`
+	Owner      User        `json:"owner" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 type OrderItem struct {

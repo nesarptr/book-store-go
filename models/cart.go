@@ -9,5 +9,5 @@ type Cart struct {
 	TotalPrice float64    `json:"totalPrice"`
 	Books      []CartItem `json:"books"`
 	UserID     uint       `json:"userId"`
-	Owner      User       `json:"owner"`
+	Owner      User       `json:"owner" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
