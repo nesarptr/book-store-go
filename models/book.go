@@ -9,5 +9,5 @@ type Book struct {
 	ImgUrl      string  `json:"imgUrl" validate:"required,min=10"`
 	Description string  `json:"description"`
 	UserID      uint    `json:"userId" validate:"required"`
-	Author      User    `json:"author" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" validate:"dive"`
+	Author      User    `json:"author" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;references:ID" validate:"dive"`
 }
