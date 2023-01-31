@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -21,5 +22,10 @@ func (user *User) BeforeCreate(tx *gorm.DB) error {
 	if foundUser.Name != "" {
 		return errors.New("User Already Exist with this email")
 	}
+	hashedPw, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	user.Password = string(hashedPw)
 	return nil
 }
