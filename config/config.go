@@ -28,7 +28,7 @@ func Connect() error {
 	if err != nil {
 		return err
 	}
-	d.AutoMigrate(&models.User{}, &models.Book{}, &models.Order{}, &models.Cart{}, &models.CartItem{})
+	d.AutoMigrate(&models.User{}, &models.Book{}, &models.Order{}, &models.Cart{}, &models.CartItem{}, &models.OrderItem{})
 	db = d
 	return nil
 }

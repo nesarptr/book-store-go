@@ -11,6 +11,8 @@ type Order struct {
 }
 
 type OrderItem struct {
-	ID    uint   `json:"id" validate:"required"`
-	Title string `json:"title" validate:"required,min=3,max=32"`
+	gorm.Model
+	OrderID uint   `json:"orderId" validate:"required"`
+	Order   Order  `json:"order" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:OrderID;references:ID" validate:"dive"`
+	Title   string `json:"title" validate:"required,min=3,max=32"`
 }
