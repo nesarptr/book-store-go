@@ -5,11 +5,6 @@ import (
 	"github.com/nesarptr/book-store-go/config"
 	"github.com/nesarptr/book-store-go/models"
 	"github.com/nesarptr/book-store-go/utils"
-	"gorm.io/gorm"
-)
-
-var (
-	db *gorm.DB
 )
 
 func SignUp(c *fiber.Ctx) error {
@@ -26,15 +21,11 @@ func SignUp(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
 
-	if err := user.Create(db); err != nil {
+	if err := user.Create(config.GetDB()); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": err.Error(),
 		})
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(user)
-}
-
-func init() {
-	db = config.GetDB()
 }
