@@ -30,9 +30,9 @@ func (user *User) BeforeCreate(db *gorm.DB) error {
 	return nil
 }
 
-func (user *User) Create(db *gorm.DB) (*User, error) {
+func (user *User) Create(db *gorm.DB) error {
 	if result := db.Create(user); result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
-	return user, nil
+	return nil
 }
