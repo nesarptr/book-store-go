@@ -3,9 +3,9 @@ package utils
 import "github.com/go-playground/validator/v10"
 
 type ErrorResponse struct {
-	FailedField string
-	Tag         string
-	Value       string
+	FailedField string `json:"failedField"`
+	Tag         string `json:"tag"`
+	Value       string `json:"value"`
 }
 
 var validate = validator.New()
