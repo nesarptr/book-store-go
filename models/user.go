@@ -16,9 +16,9 @@ type User struct {
 	Orders   []Order `json:"orders" validate:"dive"`
 }
 
-func (user *User) BeforeCreate(tx *gorm.DB) error {
+func (user *User) BeforeCreate(db *gorm.DB) error {
 	foundUser := User{}
-	tx.Where("email = ?", user.Email).First(&foundUser)
+	db.Where("email = ?", user.Email).First(&foundUser)
 	if foundUser.Name != "" {
 		return errors.New("User Already Exist with this email")
 	}
@@ -28,4 +28,11 @@ func (user *User) BeforeCreate(tx *gorm.DB) error {
 	}
 	user.Password = string(hashedPw)
 	return nil
+}
+
+func (user *User) Create(db *gorm.DB) (*User, error) {
+	if result := db.Create(user); result.Error != nil {
+		return nil, result.Error
+	}
+	return user, nil
 }
