@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/nesarptr/book-store-go/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -27,6 +28,7 @@ func Connect() error {
 	if err != nil {
 		return err
 	}
+	d.AutoMigrate(&models.User{}, &models.Book{}, &models.Order{}, &models.Cart{}, &models.CartItem{})
 	db = d
 	return nil
 }
