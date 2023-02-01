@@ -19,6 +19,8 @@ func SetUpRoutes(app *fiber.App) {
 
 	admin := app.Group("/admin", middleware.Protected()...)
 
+	admin.Post("/create", controllers.CreateBook)
+
 	// Shop Routes
 
 	// shop := app.Group("/shop", middleware.Protected()...)
