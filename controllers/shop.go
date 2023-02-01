@@ -36,3 +36,32 @@ func GetSingleBook(c *fiber.Ctx) error {
 		"data":    book,
 	})
 }
+
+func GetCart(c *fiber.Ctx) error {
+	return nil
+}
+
+func PostCart(c *fiber.Ctx) error {
+	userId := c.Locals("userId").(float64)
+	db := config.GetDB()
+	cart := new(models.Cart)
+	type cartBook struct {
+		ID       string `json:"id"`
+		Quantity int    `json:"quantity"`
+	}
+	type inputCart struct {
+		Books []cartBook `json:"books"`
+	}
+	db.Where("user_id = ?", userId).First(cart)
+	if cart.ID == 0 {
+		cart.UserID = uint(userId)
+		cart.TotalPrice = 0
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"cart": cart,
+	})
+}
+
+func RemoveCart(c *fiber.Ctx) error {
+	return nil
+}

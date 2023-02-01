@@ -31,4 +31,8 @@ func SetUpRoutes(app *fiber.App) {
 
 	shop.Get("/books", controllers.GetAllBooks)
 	shop.Get("/book/:id", controllers.GetSingleBook)
+	shop.Get("/cart", controllers.GetCart)
+	shop.Put("/cart", controllers.PostCart)
+	shop.Delete("/cart", controllers.RemoveCart)
+
 }
