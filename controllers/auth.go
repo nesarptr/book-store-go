@@ -46,7 +46,9 @@ func SignIn(c *fiber.Ctx) error {
 	input := new(loginInput)
 
 	if err := c.BodyParser(input); err != nil {
-		return err
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+			"message": err.Error(),
+		})
 	}
 
 	errors := utils.ValidateStruct(*input)
