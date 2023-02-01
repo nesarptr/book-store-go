@@ -49,8 +49,30 @@ func GetBooks(c *fiber.Ctx) error {
 	db := config.GetDB()
 	user := new(models.User)
 	db.Model(&models.User{}).Preload("Books").First(user, userId)
+	if len(user.Books) > 0 {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"message": "books retrived successfully",
+			"data":    user.Books,
+		})
+	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "books retrived successfully",
-		"data":    user.Books,
+		"message": "user does not own any book",
+	})
+}
+
+func GetBook(c *fiber.Ctx) error {
+	userId := c.Locals("userId").(float64)
+	bookId := c.Params("id")
+	db := config.GetDB()
+	book := new(models.Book)
+	db.First(book, bookId)
+	if book.UserID == uint(userId) {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"message": "book successfully retrived",
+			"data":    book,
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "this book does not belong to user",
 	})
 }

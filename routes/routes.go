@@ -21,6 +21,7 @@ func SetUpRoutes(app *fiber.App) {
 
 	admin.Post("/book", controllers.CreateBook)
 	admin.Get("/books", controllers.GetBooks)
+	admin.Get("/book/:id", controllers.GetBook)
 
 	// Shop Routes
 
