@@ -11,3 +11,10 @@ type Cart struct {
 	UserID     uint       `json:"-" validate:"required"`
 	Owner      User       `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;references:ID" validate:"-"`
 }
+
+func (cart *Cart) Create(db *gorm.DB) error {
+	if result := db.Create(cart); result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
