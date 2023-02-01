@@ -1,6 +1,10 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"errors"
+
+	"gorm.io/gorm"
+)
 
 type Book struct {
 	gorm.Model
@@ -10,6 +14,15 @@ type Book struct {
 	Description string  `json:"description"`
 	UserID      uint    `json:"userId" validate:"required"`
 	Author      User    `json:"author" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;references:ID" validate:"dive"`
+}
+
+func (book *Book) BeforeCreate(db *gorm.DB) error {
+	user := new(User)
+	db.First(user, book.UserID)
+	if user.Email == "" {
+		return errors.New("invalid user")
+	}
+	return nil
 }
 
 func (book *Book) AfterCreate(db *gorm.DB) error {
