@@ -65,23 +65,27 @@ func PostCart(c *fiber.Ctx) error {
 	}
 	cart := new(models.Cart)
 	db.Where("user_id = ?", userId).First(cart)
-	if cart.ID == 0 {
-		cart.UserID = uint(userId)
-		cart.TotalPrice = 0
-		cart.Create(db)
+	if cart.ID != 0 {
+		db.Unscoped().Where("cart_id = ?", cart.ID).Delete(&models.CartItem{})
+		db.Unscoped().Delete(cart)
 	}
+	cart.UserID = uint(userId)
+	cart.TotalPrice = 0
+	cart.Create(db)
 
 	cartItems := make([]models.CartItem, 0)
 
+	cartBooks := map[string]cartBook{}
+
 	for _, book := range InputCart.Books {
+		cartBooks[book.ID] = book
+	}
+
+	for _, book := range cartBooks {
 		cartItem := new(models.CartItem)
 		bookId, err := strconv.ParseUint(book.ID, 10, 64)
 		if err != nil {
 			return fiber.ErrInternalServerError
-		}
-		db.Where("book_id = ?", bookId).First(cartItem)
-		if cartItem.ID != 0 {
-			db.Unscoped().Delete(cartItem)
 		}
 		cartItem.CartID = cart.ID
 		cartItem.BookID = uint(bookId)
@@ -93,10 +97,8 @@ func PostCart(c *fiber.Ctx) error {
 		cartItems = append(cartItems, *cartItem)
 	}
 
-	if result := db.Create(&cartItems); result.Error != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"data": result.Error,
-		})
+	if db.Create(&cartItems).Error != nil {
+		return fiber.ErrBadRequest
 	}
 
 	for _, cartItem := range cartItems {

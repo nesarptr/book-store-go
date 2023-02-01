@@ -1,8 +1,7 @@
 package models
 
 import (
-	"errors"
-
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
@@ -18,9 +17,8 @@ type CartItem struct {
 
 func (cartItem *CartItem) BeforeCreate(db *gorm.DB) error {
 	book := new(Book)
-	db.First(book, cartItem.BookID)
-	if book.ID == 0 {
-		return errors.New("invalid book id")
+	if db.First(book, cartItem.BookID).Error != nil {
+		return fiber.ErrBadRequest
 	}
 	cartItem.Price = float64(cartItem.Quantity) * float64(book.Price)
 	return nil
