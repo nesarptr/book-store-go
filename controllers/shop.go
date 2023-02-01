@@ -41,7 +41,20 @@ func GetSingleBook(c *fiber.Ctx) error {
 }
 
 func GetCart(c *fiber.Ctx) error {
-	return nil
+	userId := c.Locals("userId").(float64)
+	db := config.GetDB()
+	cart := new(models.Cart)
+	db.Preload("Books.Book").Where("user_id = ?", userId).First(cart)
+	if cart.ID != 0 {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"message": "cart successfully retrived",
+			"data":    cart,
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "cart successfully retrived",
+		"data":    "cart is empty",
+	})
 }
 
 func PostCart(c *fiber.Ctx) error {
