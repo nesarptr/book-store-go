@@ -20,3 +20,19 @@ func GetAllBooks(c *fiber.Ctx) error {
 		"message": "no book found",
 	})
 }
+
+func GetSingleBook(c *fiber.Ctx) error {
+	bookId := c.Params("id")
+	book := new(models.Book)
+	db := config.GetDB()
+	db.First(book, bookId)
+	if book.Title == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "invalid book id",
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "book successfully retrived",
+		"data":    book,
+	})
+}
