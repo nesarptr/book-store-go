@@ -93,5 +93,5 @@ func SignIn(c *fiber.Ctx) error {
 		return fiber.ErrInternalServerError
 	}
 
-	return c.JSON(fiber.Map{"status": "success", "message": "Success login", "token": t})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "message": "Success login", "token": t})
 }
