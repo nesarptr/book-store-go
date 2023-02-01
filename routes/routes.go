@@ -29,4 +29,5 @@ func SetUpRoutes(app *fiber.App) {
 
 	shop := app.Group("/shop", middleware.Protected()...)
 
+	shop.Get("/books", controllers.GetAllBooks)
 }
