@@ -11,3 +11,11 @@ type Book struct {
 	UserID      uint    `json:"userId" validate:"required"`
 	Author      User    `json:"author" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;references:ID" validate:"dive"`
 }
+
+func (book *Book) AfterCreate(db *gorm.DB) error {
+	user := new(User)
+	db.First(user, book.UserID)
+	user.Books = append(user.Books, *book)
+	db.Save(user)
+	return nil
+}

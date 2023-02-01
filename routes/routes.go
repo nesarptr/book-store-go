@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/nesarptr/book-store-go/controllers"
 	"github.com/nesarptr/book-store-go/middleware"
+	// "github.com/nesarptr/book-store-go/middleware"
 )
 
 func SetUpRoutes(app *fiber.App) {
@@ -20,6 +21,6 @@ func SetUpRoutes(app *fiber.App) {
 
 	// Shop Routes
 
-	shop := app.Group("/shop", middleware.Protected()...)
+	// shop := app.Group("/shop", middleware.Protected()...)
 
 }
