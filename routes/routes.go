@@ -11,6 +11,7 @@ func SetUpRoutes(app *fiber.App) {
 
 	auth := app.Group("/auth")
 	auth.Post("/signup", controllers.SignUp)
+	auth.Post("/signin", controllers.SignIn)
 
 	// Admin Routes
 	// Shop Routes
