@@ -3,20 +3,27 @@ package middleware
 import (
 	"github.com/gofiber/fiber/v2"
 	jwtware "github.com/gofiber/jwt/v3"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/nesarptr/book-store-go/config"
 )
 
-func Protected() fiber.Handler {
+func Protected() []fiber.Handler {
 	secret, err := config.GetEnv("TOKEN_SECRET")
 	if err != nil {
-		return func(c *fiber.Ctx) error {
+		return []fiber.Handler{func(c *fiber.Ctx) error {
 			return fiber.ErrInternalServerError
-		}
+		}}
 	}
-	return jwtware.New(jwtware.Config{
+	return []fiber.Handler{jwtware.New(jwtware.Config{
 		SigningKey:   []byte(secret),
 		ErrorHandler: jwtError,
-	})
+	}), func(c *fiber.Ctx) error {
+		user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+		c.Locals("email", claims["email"].(string))
+		c.Locals("userId", claims["id"].(float64))
+		return c.Next()
+	}}
 }
 
 func jwtError(c *fiber.Ctx, err error) error {
