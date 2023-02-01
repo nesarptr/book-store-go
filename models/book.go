@@ -25,6 +25,13 @@ func (book *Book) BeforeCreate(db *gorm.DB) error {
 	return nil
 }
 
+func (book *Book) Create(db *gorm.DB) error {
+	if result := db.Create(book); result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
 func (book *Book) AfterCreate(db *gorm.DB) error {
 	user := new(User)
 	db.First(user, book.UserID)
