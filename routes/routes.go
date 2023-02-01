@@ -27,6 +27,6 @@ func SetUpRoutes(app *fiber.App) {
 
 	// Shop Routes
 
-	// shop := app.Group("/shop", middleware.Protected()...)
+	shop := app.Group("/shop", middleware.Protected()...)
 
 }
