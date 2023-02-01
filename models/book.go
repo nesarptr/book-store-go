@@ -12,8 +12,8 @@ type Book struct {
 	Price       float32 `json:"price" validate:"required,gt=0"`
 	ImgUrl      string  `json:"imgUrl" validate:"required,min=10"`
 	Description string  `json:"description"`
-	UserID      uint    `json:"userId" validate:"required"`
-	Author      User    `json:"author" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;references:ID" validate:"-"`
+	UserID      uint    `json:"-" validate:"required"`
+	Author      User    `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;references:ID" validate:"-"`
 }
 
 func (book *Book) BeforeCreate(db *gorm.DB) error {
