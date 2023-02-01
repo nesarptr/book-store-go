@@ -12,7 +12,9 @@ require (
 	github.com/gofiber/fiber v1.13.3 // indirect
 	github.com/gofiber/fiber/v2 v2.41.0 // indirect
 	github.com/gofiber/helmet/v2 v2.2.23 // indirect
+	github.com/gofiber/jwt/v3 v3.3.5 // indirect
 	github.com/gofiber/utils v0.0.9 // indirect
+	github.com/golang-jwt/jwt/v4 v4.4.3 // indirect
 	github.com/gorilla/schema v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
