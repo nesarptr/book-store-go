@@ -66,6 +66,11 @@ func GetBook(c *fiber.Ctx) error {
 	db := config.GetDB()
 	book := new(models.Book)
 	db.First(book, bookId)
+	if book.Title == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "invalid book id",
+		})
+	}
 	if book.UserID == uint(userId) {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"message": "book successfully retrived",
@@ -73,6 +78,30 @@ func GetBook(c *fiber.Ctx) error {
 		})
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "this book does not belong to user",
+	})
+}
+
+func DeleteBook(c *fiber.Ctx) error {
+	userId := c.Locals("userId").(float64)
+	bookId := c.Params("id")
+	db := config.GetDB()
+	book := new(models.Book)
+	db.First(book, bookId)
+	if book.Title == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "invalid book id",
+		})
+	}
+	if book.UserID == uint(userId) {
+		db.Unscoped().Where("book_id = ?", bookId).Delete(models.CartItem{})
+		db.Unscoped().Delete(models.Book{}, bookId)
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"message": "book successfully deleted",
+			"data":    book,
+		})
+	}
+	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 		"message": "this book does not belong to user",
 	})
 }
