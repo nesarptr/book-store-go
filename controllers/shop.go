@@ -56,7 +56,15 @@ func PostCart(c *fiber.Ctx) error {
 	if cart.ID == 0 {
 		cart.UserID = uint(userId)
 		cart.TotalPrice = 0
+		cart.Create(db)
 	}
+	InputCart := new(inputCart)
+	if err := c.BodyParser(InputCart); err != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+			"data": err.Error(),
+		})
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"cart": cart,
 	})
