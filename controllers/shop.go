@@ -82,9 +82,9 @@ func PostCart(c *fiber.Ctx) error {
 		db.Unscoped().Where("cart_id = ?", cart.ID).Delete(&models.CartItem{})
 		db.Unscoped().Delete(cart)
 	}
-	cart.UserID = uint(userId)
-	cart.TotalPrice = 0
-	cart.Create(db)
+	if len(InputCart.Books) <= 0 {
+		return fiber.ErrBadRequest
+	}
 
 	cartItems := make([]models.CartItem, 0)
 
@@ -114,6 +114,10 @@ func PostCart(c *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
+	cart.UserID = uint(userId)
+	cart.TotalPrice = 0
+	cart.Create(db)
+
 	for _, cartItem := range cartItems {
 		cart.Books = append(cart.Books, cartItem)
 		cart.TotalPrice += cartItem.Price
@@ -133,5 +137,15 @@ func PostCart(c *fiber.Ctx) error {
 }
 
 func RemoveCart(c *fiber.Ctx) error {
-	return nil
+	userId := c.Locals("userId").(float64)
+	cart := new(models.Cart)
+	db := config.GetDB()
+	db.Where("user_id = ?", userId).First(cart)
+	if cart.ID != 0 {
+		db.Unscoped().Where("cart_id = ?", cart.ID).Delete(&models.CartItem{})
+		db.Unscoped().Delete(cart)
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "cart successfully deleted",
+	})
 }
