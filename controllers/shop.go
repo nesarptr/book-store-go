@@ -1,9 +1,12 @@
 package controllers
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/nesarptr/book-store-go/config"
 	"github.com/nesarptr/book-store-go/models"
+	"github.com/nesarptr/book-store-go/utils"
 )
 
 func GetAllBooks(c *fiber.Ctx) error {
@@ -44,7 +47,6 @@ func GetCart(c *fiber.Ctx) error {
 func PostCart(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(float64)
 	db := config.GetDB()
-	cart := new(models.Cart)
 	type cartBook struct {
 		ID       string `json:"id"`
 		Quantity int    `json:"quantity"`
@@ -52,21 +54,66 @@ func PostCart(c *fiber.Ctx) error {
 	type inputCart struct {
 		Books []cartBook `json:"books"`
 	}
-	db.Where("user_id = ?", userId).First(cart)
-	if cart.ID == 0 {
-		cart.UserID = uint(userId)
-		cart.TotalPrice = 0
-		cart.Create(db)
-	}
 	InputCart := new(inputCart)
 	if err := c.BodyParser(InputCart); err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
 			"data": err.Error(),
 		})
 	}
+	if len(InputCart.Books) <= 0 {
+		return fiber.ErrBadRequest
+	}
+	cart := new(models.Cart)
+	db.Where("user_id = ?", userId).First(cart)
+	if cart.ID == 0 {
+		cart.UserID = uint(userId)
+		cart.TotalPrice = 0
+		cart.Create(db)
+	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"cart": cart,
+	cartItems := make([]models.CartItem, 0)
+
+	for _, book := range InputCart.Books {
+		cartItem := new(models.CartItem)
+		bookId, err := strconv.ParseUint(book.ID, 10, 64)
+		if err != nil {
+			return fiber.ErrInternalServerError
+		}
+		db.Where("book_id = ?", bookId).First(cartItem)
+		if cartItem.ID != 0 {
+			db.Unscoped().Delete(cartItem)
+		}
+		cartItem.CartID = cart.ID
+		cartItem.BookID = uint(bookId)
+		cartItem.Quantity = book.Quantity
+		errors := utils.ValidateStruct(cartItem)
+		if errors != nil {
+			return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
+		}
+		cartItems = append(cartItems, *cartItem)
+	}
+
+	if result := db.Create(&cartItems); result.Error != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"data": result.Error,
+		})
+	}
+
+	for _, cartItem := range cartItems {
+		cart.Books = append(cart.Books, cartItem)
+		cart.TotalPrice += cartItem.Price
+	}
+
+	errors := utils.ValidateStruct(cart)
+
+	if errors != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
+	}
+
+	db.Save(cart)
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"cart": "cart updated successfully",
 	})
 }
 
