@@ -13,7 +13,7 @@ type Book struct {
 	ImgUrl      string  `json:"imgUrl" validate:"required,min=10"`
 	Description string  `json:"description"`
 	UserID      uint    `json:"userId" validate:"required"`
-	Author      User    `json:"author" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;references:ID" validate:"dive"`
+	Author      User    `json:"author" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;references:ID" validate:"-"`
 }
 
 func (book *Book) BeforeCreate(db *gorm.DB) error {
@@ -29,13 +29,5 @@ func (book *Book) Create(db *gorm.DB) error {
 	if result := db.Create(book); result.Error != nil {
 		return result.Error
 	}
-	return nil
-}
-
-func (book *Book) AfterCreate(db *gorm.DB) error {
-	user := new(User)
-	db.First(user, book.UserID)
-	user.Books = append(user.Books, *book)
-	db.Save(user)
 	return nil
 }

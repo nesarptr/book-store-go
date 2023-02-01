@@ -25,11 +25,18 @@ func CreateBook(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
 
-	if err := book.Create(config.GetDB()); err != nil {
+	db := config.GetDB()
+
+	if err := book.Create(db); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"data": err.Error(),
 		})
 	}
+
+	user := new(models.User)
+	db.First(user, book.UserID)
+	user.Books = append(user.Books, *book)
+	db.Save(user)
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"data":    book,
