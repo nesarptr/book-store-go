@@ -82,6 +82,41 @@ func GetBook(c *fiber.Ctx) error {
 	})
 }
 
+func UpdateBook(c *fiber.Ctx) error {
+	userId := c.Locals("userId").(float64)
+	bookId := c.Params("id")
+	db := config.GetDB()
+	book := new(models.Book)
+	db.First(book, bookId)
+	if book.Title == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "invalid book id",
+		})
+	}
+	if book.UserID == uint(userId) {
+		if err := c.BodyParser(book); err != nil {
+			return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+				"data": err.Error(),
+			})
+		}
+
+		errors := utils.ValidateStruct(*book)
+
+		if errors != nil {
+			return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
+		}
+		db.Save(book)
+
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"message": "book successfully updated",
+			"data":    book,
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "this book does not belong to user",
+	})
+}
+
 func DeleteBook(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(float64)
 	bookId := c.Params("id")
