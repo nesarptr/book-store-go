@@ -70,7 +70,6 @@ func SignIn(c *fiber.Ctx) error {
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"message": "password is not valid",
-			"data":    err.Error(),
 		})
 	}
 
