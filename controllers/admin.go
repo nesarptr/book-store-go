@@ -47,12 +47,10 @@ func CreateBook(c *fiber.Ctx) error {
 func GetBooks(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(float64)
 	db := config.GetDB()
-	// user := new(models.User)
-	// db.Model(&models.User{}).Preload("Books").First(user, userId)
-	db.Unscoped().Where("user_id = ?", userId).Delete(&models.Book{})
-	db.Unscoped().Delete(&models.User{}, userId)
+	user := new(models.User)
+	db.Model(&models.User{}).Preload("Books").First(user, userId)
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "books retrived successfully",
-		// "data":    user.Books,
+		"data":    user.Books,
 	})
 }
