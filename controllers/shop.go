@@ -164,7 +164,7 @@ func PostOrder(c *fiber.Ctx) error {
 		orderItem.ImgUrl = cartItem.Book.ImgUrl
 		orderItem.Description = cartItem.Book.Description
 		orderItem.BookID = cartItem.Book.ID
-		orderItem.UserID = cartItem.Book.ID
+		orderItem.UserID = cartItem.Book.UserID
 		orderItem.Quantity = cartItem.Quantity
 		errors := utils.ValidateStruct(orderItem)
 		if errors != nil {
