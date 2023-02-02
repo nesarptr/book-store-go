@@ -149,7 +149,7 @@ func PostOrder(c *fiber.Ctx) error {
 	}
 	order := new(models.Order)
 	order.IsPaid = false
-	order.Owner = cart.Owner
+	order.UserID = uint(userId)
 	order.TotalPrice = cart.TotalPrice
 	order.PaymentID = ""
 	if db.Create(order).Error != nil {
