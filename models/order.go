@@ -8,6 +8,6 @@ type Order struct {
 	Books      []OrderItem `json:"books" validate:"dive"`
 	IsPaid     bool        `json:"isPaid" validate:"required"`
 	PaymentID  string      `json:"paymentId" validate:"-"`
-	UserID     uint        `json:"ownerId" validate:"required"`
-	Owner      User        `json:"owner" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;references:ID" validate:"-"`
+	UserID     uint        `json:"owner" validate:"required"`
+	Owner      User        `json:"-" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID;references:ID" validate:"-"`
 }
