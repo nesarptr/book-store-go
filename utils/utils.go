@@ -3,16 +3,20 @@ package utils
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
-func RemoveImage(imgUrl string) error {
-	filename := fmt.Sprintf("./images/%s", imgUrl)
-	if _, err := os.Stat(filename); err == nil {
-		if err := os.Remove(filename); err != nil {
-			return err
+func RemoveImage(filename string, maxRetries int, done chan error) {
+	imgUrl := fmt.Sprintf("./images/%s", filename)
+	if _, err := os.Stat(imgUrl); err == nil {
+		for i := 0; i < maxRetries; i++ {
+			if err := os.Remove(imgUrl); err == nil {
+				done <- nil
+			}
+			time.Sleep(time.Second)
 		}
+		done <- fmt.Errorf("failed to remove file after %d retries", maxRetries)
 	} else {
-		return err
+		done <- err
 	}
-	return nil
 }

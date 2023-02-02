@@ -18,6 +18,7 @@ func CreateBook(c *fiber.Ctx) error {
 	book.Title = c.FormValue("name")
 	price, err := strconv.ParseFloat(c.FormValue("price"), 32)
 	if err != nil {
+		fmt.Println(book.Title)
 		return fiber.ErrUnprocessableEntity
 	}
 	book.Price = float32(price)
@@ -80,7 +81,7 @@ func GetBooks(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(float64)
 	db := config.GetDB()
 	user := new(models.User)
-	db.Model(&models.User{}).Preload("Books").First(user, userId)
+	db.Model(&models.User{}).Order("ID desc").Preload("Books").First(user, userId)
 	if len(user.Books) > 0 {
 		return c.Status(fiber.StatusOK).JSON(user.Books)
 	}
@@ -152,8 +153,11 @@ func UpdateBook(c *fiber.Ctx) error {
 			if err := c.SaveFile(bookImg, imgDir); err != nil {
 				return fiber.ErrUnprocessableEntity
 			}
+			done := make(chan error)
 
-			if err := utils.RemoveImage(book.ImgUrl); err != nil {
+			go utils.RemoveImage(book.ImgUrl, 60, done)
+			err := <-done
+			if err != nil {
 				fmt.Println(err.Error())
 			}
 
@@ -188,7 +192,11 @@ func DeleteBook(c *fiber.Ctx) error {
 	if book.UserID == uint(userId) {
 		db.Unscoped().Where("book_id = ?", bookId).Delete(models.CartItem{})
 		db.Unscoped().Delete(models.Book{}, bookId)
-		if err := utils.RemoveImage(book.ImgUrl); err != nil {
+		done := make(chan error)
+
+		go utils.RemoveImage(book.ImgUrl, 60, done)
+		err := <-done
+		if err != nil {
 			fmt.Println(err.Error())
 		}
 		return c.Status(fiber.StatusOK).JSON(book)

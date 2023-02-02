@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"strconv"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/nesarptr/book-store-go/config"
 	"github.com/nesarptr/book-store-go/models"
@@ -12,7 +10,7 @@ import (
 func GetAllBooks(c *fiber.Ctx) error {
 	db := config.GetDB()
 	books := new([]models.Book)
-	db.Find(books)
+	db.Order("ID desc").Find(books)
 	if len(*books) > 0 {
 		return c.Status(fiber.StatusOK).JSON(books)
 	}
@@ -38,7 +36,7 @@ func GetCart(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(float64)
 	db := config.GetDB()
 	cart := new(models.Cart)
-	db.Preload("Books.Book").Where("user_id = ?", userId).First(cart)
+	db.Order("ID desc").Preload("Books.Book").Where("user_id = ?", userId).First(cart)
 	if cart.ID != 0 {
 		return c.Status(fiber.StatusOK).JSON(cart)
 	}
@@ -52,8 +50,8 @@ func PostCart(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(float64)
 	db := config.GetDB()
 	type cartBook struct {
-		ID       string `json:"id"`
-		Quantity int    `json:"quantity"`
+		ID       uint `json:"id"`
+		Quantity int  `json:"quantity"`
 	}
 	type inputCart struct {
 		Books []cartBook `json:"books"`
@@ -62,9 +60,6 @@ func PostCart(c *fiber.Ctx) error {
 	if err := c.BodyParser(InputCart); err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(err.Error())
 	}
-	if len(InputCart.Books) <= 0 {
-		return fiber.ErrBadRequest
-	}
 	cart := new(models.Cart)
 	db.Where("user_id = ?", userId).First(cart)
 	if cart.ID != 0 {
@@ -72,40 +67,43 @@ func PostCart(c *fiber.Ctx) error {
 		db.Unscoped().Delete(cart)
 	}
 	if len(InputCart.Books) <= 0 {
-		return fiber.ErrBadRequest
+		return c.Status(200).JSON(fiber.Map{
+			"message": "cart is successfully removed",
+		})
 	}
 
 	cartItems := make([]models.CartItem, 0)
 
-	cartBooks := map[string]cartBook{}
+	cartBooks := map[uint]cartBook{}
 
 	for _, book := range InputCart.Books {
 		cartBooks[book.ID] = book
 	}
 
+	cart.UserID = uint(userId)
+	cart.TotalPrice = 0
+	cart.Create(db)
+
 	for _, book := range cartBooks {
 		cartItem := new(models.CartItem)
-		bookId, err := strconv.ParseUint(book.ID, 10, 64)
-		if err != nil {
-			return fiber.ErrInternalServerError
-		}
+		bookId := book.ID
 		cartItem.CartID = cart.ID
 		cartItem.BookID = uint(bookId)
 		cartItem.Quantity = book.Quantity
 		errors := utils.ValidateStruct(cartItem)
 		if errors != nil {
+			db.Unscoped().Where("cart_id = ?", cart.ID).Delete(&models.CartItem{})
+			db.Unscoped().Delete(cart)
 			return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 		}
 		cartItems = append(cartItems, *cartItem)
 	}
 
 	if db.Create(&cartItems).Error != nil {
+		db.Unscoped().Where("cart_id = ?", cart.ID).Delete(&models.CartItem{})
+		db.Unscoped().Delete(cart)
 		return fiber.ErrBadRequest
 	}
-
-	cart.UserID = uint(userId)
-	cart.TotalPrice = 0
-	cart.Create(db)
 
 	for _, cartItem := range cartItems {
 		cart.Books = append(cart.Books, cartItem)
@@ -115,6 +113,8 @@ func PostCart(c *fiber.Ctx) error {
 	errors := utils.ValidateStruct(cart)
 
 	if errors != nil {
+		db.Unscoped().Where("cart_id = ?", cart.ID).Delete(&models.CartItem{})
+		db.Unscoped().Delete(cart)
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
 	}
 
