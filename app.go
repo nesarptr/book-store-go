@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/helmet/v2"
 	"github.com/nesarptr/book-store-go/config"
@@ -20,9 +21,10 @@ func main() {
 	}
 
 	app := fiber.New()
-	app.Static("/", "./images")
 	app.Use(cors.New())
 	app.Use(helmet.New())
+	app.Use(compress.New())
+	app.Static("/", "./images")
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")
