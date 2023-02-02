@@ -61,3 +61,31 @@ func Pay(c *fiber.Ctx) error {
 		"clientSecret": pi.ClientSecret,
 	})
 }
+
+func ConfirmPay(c *fiber.Ctx) error {
+	sk, _ := config.GetEnv("STRIPE_KEY")
+	stripe.Key = sk
+	orderId := c.Params("id")
+	order := new(models.Order)
+	db := config.GetDB()
+	db.First(order, orderId)
+	if order.ID == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "invalid order id",
+		})
+	}
+	pi, _ := paymentintent.Get(order.PaymentID, nil)
+	if pi.Status != stripe.PaymentIntentStatusSucceeded {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "user did not pay",
+		})
+	}
+
+	order.IsPaid = true
+	db.Save(order)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "payment successful",
+	})
+
+}

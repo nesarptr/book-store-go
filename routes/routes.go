@@ -44,5 +44,6 @@ func SetUpRoutes(app *fiber.App) {
 
 	pay.Get("/pk", controllers.GetPK)
 	pay.Post("/:id", controllers.Pay)
+	pay.Put("/:id", controllers.ConfirmPay)
 
 }
