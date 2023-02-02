@@ -93,5 +93,31 @@ func SignIn(c *fiber.Ctx) error {
 		return fiber.ErrInternalServerError
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "message": "Success login", "token": t})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Success login", "token": t})
+}
+
+func Jwt(c *fiber.Ctx) error {
+	userId := c.Locals("userId")
+	email := c.Locals("email")
+	claims := jwt.MapClaims{
+		"id":    userId,
+		"email": email,
+		"exp":   time.Now().Add(time.Minute * 15).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	secret, err := config.GetEnv("TOKEN_SECRET")
+
+	if err != nil {
+		return fiber.ErrInternalServerError
+	}
+
+	t, err := token.SignedString([]byte(secret))
+
+	if err != nil {
+		return fiber.ErrInternalServerError
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Success jwt renew", "token": t})
 }

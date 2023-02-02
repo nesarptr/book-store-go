@@ -24,7 +24,7 @@ func main() {
 
 	routes.SetUpRoutes(app)
 
-	log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen(":4000"))
 }
 
 func init() {

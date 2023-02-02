@@ -4,7 +4,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/nesarptr/book-store-go/controllers"
 	"github.com/nesarptr/book-store-go/middleware"
-	// "github.com/nesarptr/book-store-go/middleware"
 )
 
 func SetUpRoutes(app *fiber.App) {
@@ -14,6 +13,8 @@ func SetUpRoutes(app *fiber.App) {
 	auth := app.Group("/auth")
 	auth.Post("/signup", controllers.SignUp)
 	auth.Post("/signin", controllers.SignIn)
+	auth.Get("/jwt", middleware.Protected()...)
+	auth.Get("/jwt", controllers.Jwt)
 
 	// Admin Routes
 

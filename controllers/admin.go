@@ -28,9 +28,7 @@ func CreateBook(c *fiber.Ctx) error {
 	db := config.GetDB()
 
 	if err := book.Create(db); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"data": err.Error(),
-		})
+		return c.Status(fiber.StatusBadRequest).JSON(err.Error())
 	}
 
 	user := new(models.User)
@@ -38,10 +36,7 @@ func CreateBook(c *fiber.Ctx) error {
 	user.Books = append(user.Books, *book)
 	db.Save(user)
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"data":    book,
-		"message": "book created successfully",
-	})
+	return c.Status(fiber.StatusCreated).JSON(book)
 }
 
 func GetBooks(c *fiber.Ctx) error {
@@ -50,10 +45,7 @@ func GetBooks(c *fiber.Ctx) error {
 	user := new(models.User)
 	db.Model(&models.User{}).Preload("Books").First(user, userId)
 	if len(user.Books) > 0 {
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"message": "books retrived successfully",
-			"data":    user.Books,
-		})
+		return c.Status(fiber.StatusOK).JSON(user.Books)
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "user does not own any book",
@@ -72,10 +64,7 @@ func GetBook(c *fiber.Ctx) error {
 		})
 	}
 	if book.UserID == uint(userId) {
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"message": "book successfully retrived",
-			"data":    book,
-		})
+		return c.Status(fiber.StatusOK).JSON(book)
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "this book does not belong to user",
@@ -95,9 +84,7 @@ func UpdateBook(c *fiber.Ctx) error {
 	}
 	if book.UserID == uint(userId) {
 		if err := c.BodyParser(book); err != nil {
-			return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-				"data": err.Error(),
-			})
+			return c.Status(fiber.StatusUnprocessableEntity).JSON(err.Error())
 		}
 
 		errors := utils.ValidateStruct(*book)
@@ -107,10 +94,7 @@ func UpdateBook(c *fiber.Ctx) error {
 		}
 		db.Save(book)
 
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"message": "book successfully updated",
-			"data":    book,
-		})
+		return c.Status(fiber.StatusOK).JSON(book)
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "this book does not belong to user",
@@ -131,10 +115,7 @@ func DeleteBook(c *fiber.Ctx) error {
 	if book.UserID == uint(userId) {
 		db.Unscoped().Where("book_id = ?", bookId).Delete(models.CartItem{})
 		db.Unscoped().Delete(models.Book{}, bookId)
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"message": "book successfully deleted",
-			"data":    book,
-		})
+		return c.Status(fiber.StatusOK).JSON(book)
 	}
 	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 		"message": "this book does not belong to user",

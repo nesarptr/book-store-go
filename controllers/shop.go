@@ -14,10 +14,7 @@ func GetAllBooks(c *fiber.Ctx) error {
 	books := new([]models.Book)
 	db.Find(books)
 	if len(*books) > 0 {
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"message": "all books retrived successfully",
-			"data":    books,
-		})
+		return c.Status(fiber.StatusOK).JSON(books)
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "no book found",
@@ -34,10 +31,7 @@ func GetSingleBook(c *fiber.Ctx) error {
 			"message": "invalid book id",
 		})
 	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "book successfully retrived",
-		"data":    book,
-	})
+	return c.Status(fiber.StatusOK).JSON(book)
 }
 
 func GetCart(c *fiber.Ctx) error {
@@ -46,10 +40,7 @@ func GetCart(c *fiber.Ctx) error {
 	cart := new(models.Cart)
 	db.Preload("Books.Book").Where("user_id = ?", userId).First(cart)
 	if cart.ID != 0 {
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"message": "cart successfully retrived",
-			"data":    cart,
-		})
+		return c.Status(fiber.StatusOK).JSON(cart)
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "cart successfully retrived",
@@ -69,9 +60,7 @@ func PostCart(c *fiber.Ctx) error {
 	}
 	InputCart := new(inputCart)
 	if err := c.BodyParser(InputCart); err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"data": err.Error(),
-		})
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(err.Error())
 	}
 	if len(InputCart.Books) <= 0 {
 		return fiber.ErrBadRequest
