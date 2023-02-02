@@ -198,11 +198,11 @@ func PostOrder(c *fiber.Ctx) error {
 
 func GetOrder(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(float64)
-	order := new(models.Order)
+	orders := make([]models.Order, 0)
 	db := config.GetDB()
-	db.Order("ID desc").Preload("Books").Where("user_id = ?", userId).First(order)
-	if order.ID == 0 {
+	db.Order("ID desc").Preload("Books").Where("user_id = ?", userId).Find(&orders)
+	if len(orders) == 0 {
 		return c.Status(fiber.StatusOK).JSON([]interface{}{})
 	}
-	return c.Status(fiber.StatusOK).JSON(order)
+	return c.Status(fiber.StatusOK).JSON(orders)
 }
