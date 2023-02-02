@@ -138,3 +138,60 @@ func RemoveCart(c *fiber.Ctx) error {
 		"message": "cart successfully deleted",
 	})
 }
+
+func PostOrder(c *fiber.Ctx) error {
+	userId := c.Locals("userId").(float64)
+	cart := new(models.Cart)
+	db := config.GetDB()
+	db.Order("ID desc").Preload("Books.Book").Where("user_id = ?", userId).First(cart)
+	if cart.ID == 0 {
+		return fiber.ErrBadRequest
+	}
+	order := new(models.Order)
+	order.IsPaid = false
+	order.Owner = cart.Owner
+	order.TotalPrice = cart.TotalPrice
+	order.PaymentID = ""
+	if db.Create(order).Error != nil {
+		return fiber.ErrInternalServerError
+	}
+	orderItems := make([]models.OrderItem, 0)
+	for _, cartItem := range cart.Books {
+		orderItem := new(models.OrderItem)
+		orderItem.OrderID = order.ID
+		orderItem.Title = cartItem.Book.Title
+		orderItem.Price = float64(cartItem.Book.Price)
+		orderItem.ImgUrl = cartItem.Book.ImgUrl
+		orderItem.Description = cartItem.Book.Description
+		orderItem.BookID = cartItem.Book.ID
+		orderItem.UserID = cartItem.Book.ID
+		orderItem.Quantity = cartItem.Quantity
+		errors := utils.ValidateStruct(orderItem)
+		if errors != nil {
+			db.Unscoped().Where("order_id = ?", order.ID).Delete(&models.OrderItem{})
+			db.Unscoped().Delete(order)
+			return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
+		}
+		orderItems = append(orderItems, *orderItem)
+	}
+	if db.Create(&orderItems).Error != nil {
+		db.Unscoped().Where("order_id = ?", order.ID).Delete(&models.OrderItem{})
+		db.Unscoped().Delete(order)
+		return fiber.ErrBadRequest
+	}
+	order.Books = orderItems
+	errors := utils.ValidateStruct(order)
+	if errors != nil {
+		db.Unscoped().Where("order_id = ?", order.ID).Delete(&models.OrderItem{})
+		db.Unscoped().Delete(order)
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(errors)
+	}
+	if db.Save(order).Error != nil {
+		db.Unscoped().Where("order_id = ?", order.ID).Delete(&models.OrderItem{})
+		db.Unscoped().Delete(order)
+		return fiber.ErrBadRequest
+	}
+	db.Unscoped().Where("cart_id = ?", cart.ID).Delete(&models.CartItem{})
+	db.Unscoped().Delete(cart)
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "order placed successfully"})
+}
