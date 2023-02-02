@@ -3,6 +3,9 @@ package controllers
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/nesarptr/book-store-go/config"
+	"github.com/nesarptr/book-store-go/models"
+	"github.com/stripe/stripe-go/v74"
+	"github.com/stripe/stripe-go/v74/paymentintent"
 )
 
 func GetPK(c *fiber.Ctx) error {
@@ -11,6 +14,48 @@ func GetPK(c *fiber.Ctx) error {
 		return fiber.ErrInternalServerError
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"publishableKey": pk,
+		"key": pk,
+	})
+}
+
+func Pay(c *fiber.Ctx) error {
+	userId := c.Locals("userId").(float64)
+	orderId := c.Params("id")
+	order := new(models.Order)
+	db := config.GetDB()
+	db.First(order, orderId)
+	if order.ID == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "invalid order id",
+		})
+	}
+	if order.UserID != uint(userId) {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "this order does not belong to user",
+		})
+	}
+	if order.IsPaid {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"message": "the amount is already paid for this order",
+		})
+	}
+	var pi *stripe.PaymentIntent
+	if order.PaymentID != "" {
+		pi, _ = paymentintent.Get(order.PaymentID, nil)
+	} else {
+		params := &stripe.PaymentIntentParams{
+			Amount:   stripe.Int64(int64(order.TotalPrice * 100)),
+			Currency: stripe.String(string(stripe.CurrencyUSD)),
+			AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
+				Enabled: stripe.Bool(true),
+			},
+			ReceiptEmail: stripe.String(c.Locals("email").(string)),
+		}
+		pi, _ = paymentintent.New(params)
+		order.PaymentID = pi.ID
+		db.Save(order)
+	}
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"clientSecret": pi.ClientSecret,
 	})
 }

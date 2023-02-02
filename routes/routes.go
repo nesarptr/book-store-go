@@ -43,5 +43,6 @@ func SetUpRoutes(app *fiber.App) {
 	pay := app.Group("/pay", middleware.Protected()...)
 
 	pay.Get("/pk", controllers.GetPK)
+	pay.Post("/:id", controllers.Pay)
 
 }
