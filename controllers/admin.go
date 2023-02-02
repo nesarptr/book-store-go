@@ -73,7 +73,6 @@ func CreateBook(c *fiber.Ctx) error {
 	db.First(user, book.UserID)
 	user.Books = append(user.Books, *book)
 	db.Save(user)
-	fmt.Println(book)
 	return c.Status(fiber.StatusCreated).JSON(book)
 }
 
@@ -96,7 +95,7 @@ func GetBook(c *fiber.Ctx) error {
 	db := config.GetDB()
 	book := new(models.Book)
 	db.First(book, bookId)
-	if book.Title == "" {
+	if book.ID == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "invalid book id",
 		})
@@ -115,16 +114,52 @@ func UpdateBook(c *fiber.Ctx) error {
 	db := config.GetDB()
 	book := new(models.Book)
 	db.First(book, bookId)
-	if book.Title == "" {
+	if book.ID == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "invalid book id",
 		})
 	}
 	if book.UserID == uint(userId) {
-		if err := c.BodyParser(book); err != nil {
-			return c.Status(fiber.StatusUnprocessableEntity).JSON(err.Error())
+		book.Title = c.FormValue("name")
+		price, err := strconv.ParseFloat(c.FormValue("price"), 32)
+		if err != nil {
+			return fiber.ErrUnprocessableEntity
 		}
+		book.Price = float32(price)
+		book.Description = c.FormValue("description")
+		bookImg, err := c.FormFile("image")
+		if err == nil {
+			extension := filepath.Ext(bookImg.Filename)
 
+			validExtensions := []string{".jpg", ".jpeg", ".png"}
+
+			// Check if the extension is valid
+			valid := false
+			for _, v := range validExtensions {
+				if v == extension {
+					valid = true
+					break
+				}
+			}
+
+			if !valid {
+				return fiber.ErrUnprocessableEntity
+			}
+
+			imgUrl := fmt.Sprintf("%d-%s", time.Now().Unix(), bookImg.Filename)
+			imgDir := fmt.Sprintf("./images/%s", imgUrl)
+
+			if err := c.SaveFile(bookImg, imgDir); err != nil {
+				return fiber.ErrUnprocessableEntity
+			}
+
+			if err := utils.RemoveImage(book.ImgUrl); err != nil {
+				fmt.Println(err.Error())
+			}
+
+			book.ImgUrl = imgUrl
+
+		}
 		errors := utils.ValidateStruct(*book)
 
 		if errors != nil {
@@ -145,7 +180,7 @@ func DeleteBook(c *fiber.Ctx) error {
 	db := config.GetDB()
 	book := new(models.Book)
 	db.First(book, bookId)
-	if book.Title == "" {
+	if book.ID == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "invalid book id",
 		})
@@ -153,6 +188,9 @@ func DeleteBook(c *fiber.Ctx) error {
 	if book.UserID == uint(userId) {
 		db.Unscoped().Where("book_id = ?", bookId).Delete(models.CartItem{})
 		db.Unscoped().Delete(models.Book{}, bookId)
+		if err := utils.RemoveImage(book.ImgUrl); err != nil {
+			fmt.Println(err.Error())
+		}
 		return c.Status(fiber.StatusOK).JSON(book)
 	}
 	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
