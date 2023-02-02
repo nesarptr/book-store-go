@@ -195,3 +195,14 @@ func PostOrder(c *fiber.Ctx) error {
 	db.Unscoped().Delete(cart)
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "order placed successfully"})
 }
+
+func GetOrder(c *fiber.Ctx) error {
+	userId := c.Locals("userId").(float64)
+	order := new(models.Order)
+	db := config.GetDB()
+	db.Order("ID desc").Preload("Books").Where("user_id = ?", userId).First(order)
+	if order.ID == 0 {
+		return c.Status(fiber.StatusOK).JSON([]interface{}{})
+	}
+	return c.Status(fiber.StatusOK).JSON(order)
+}
