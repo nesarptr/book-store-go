@@ -1,6 +1,11 @@
 package controllers
 
 import (
+	"fmt"
+	"path/filepath"
+	"strconv"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/nesarptr/book-store-go/config"
 	"github.com/nesarptr/book-store-go/models"
@@ -9,11 +14,44 @@ import (
 
 func CreateBook(c *fiber.Ctx) error {
 	book := new(models.Book)
-	if err := c.BodyParser(book); err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+
+	book.Title = c.FormValue("name")
+	price, err := strconv.ParseFloat(c.FormValue("price"), 32)
+	if err != nil {
+		return fiber.ErrUnprocessableEntity
 	}
+	book.Price = float32(price)
+	book.Description = c.FormValue("description")
+	bookImg, err := c.FormFile("image")
+	if err != nil {
+		return fiber.ErrUnprocessableEntity
+	}
+
+	extension := filepath.Ext(bookImg.Filename)
+
+	validExtensions := []string{".jpg", ".jpeg", ".png"}
+
+	// Check if the extension is valid
+	valid := false
+	for _, v := range validExtensions {
+		if v == extension {
+			valid = true
+			break
+		}
+	}
+
+	if !valid {
+		return fiber.ErrUnprocessableEntity
+	}
+
+	imgUrl := fmt.Sprintf("%d-%s", time.Now().Unix(), bookImg.Filename)
+	imgDir := fmt.Sprintf("./images/%s", imgUrl)
+
+	if err := c.SaveFile(bookImg, imgDir); err != nil {
+		return fiber.ErrUnprocessableEntity
+	}
+
+	book.ImgUrl = imgUrl
 
 	userId := c.Locals("userId").(float64)
 
@@ -35,7 +73,7 @@ func CreateBook(c *fiber.Ctx) error {
 	db.First(user, book.UserID)
 	user.Books = append(user.Books, *book)
 	db.Save(user)
-
+	fmt.Println(book)
 	return c.Status(fiber.StatusCreated).JSON(book)
 }
 

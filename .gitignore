@@ -16,6 +16,7 @@
 
 .vscode/
 tmp/
+images/
 
 # dotenv environment variables file
 .env

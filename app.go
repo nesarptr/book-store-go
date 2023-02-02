@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -13,8 +15,12 @@ import (
 )
 
 func main() {
-	app := fiber.New()
+	if err := os.MkdirAll(filepath.Dir("./images/"), os.ModePerm); err != nil {
+		fmt.Println(err.Error())
+	}
 
+	app := fiber.New()
+	app.Static("/", "./images")
 	app.Use(cors.New())
 	app.Use(helmet.New())
 
