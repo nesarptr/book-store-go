@@ -19,6 +19,8 @@ func GetPK(c *fiber.Ctx) error {
 }
 
 func Pay(c *fiber.Ctx) error {
+	sk, _ := config.GetEnv("STRIPE_KEY")
+	stripe.Key = sk
 	userId := c.Locals("userId").(float64)
 	orderId := c.Params("id")
 	order := new(models.Order)
