@@ -37,4 +37,11 @@ func SetUpRoutes(app *fiber.App) {
 	shop.Delete("/cart", controllers.RemoveCart)
 	shop.Get("/order", controllers.GetOrder)
 	shop.Post("/order", controllers.PostOrder)
+
+	// Payment Routes
+
+	pay := app.Group("/pay", middleware.Protected()...)
+
+	pay.Get("/pk", controllers.GetPK)
+
 }
