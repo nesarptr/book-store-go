@@ -65,16 +65,16 @@ func Pay(c *fiber.Ctx) error {
 func ConfirmPay(c *fiber.Ctx) error {
 	sk, _ := config.GetEnv("STRIPE_KEY")
 	stripe.Key = sk
-	orderId := c.Params("id")
+	paymentId := c.Params("id")
 	order := new(models.Order)
 	db := config.GetDB()
-	db.First(order, orderId)
+	db.Where("payment_id = ?", paymentId).First(order)
 	if order.ID == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "invalid order id",
+			"message": "invalid order",
 		})
 	}
-	pi, _ := paymentintent.Get(order.PaymentID, nil)
+	pi, _ := paymentintent.Get(paymentId, nil)
 	if pi.Status != stripe.PaymentIntentStatusSucceeded {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "user did not pay",
