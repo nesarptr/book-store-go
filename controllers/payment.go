@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/nesarptr/book-store-go/config"
 	"github.com/nesarptr/book-store-go/models"
@@ -9,17 +11,14 @@ import (
 )
 
 func GetPK(c *fiber.Ctx) error {
-	pk, err := config.GetEnv("STRIPE_PUBLISHABLE_KEY")
-	if err != nil {
-		return fiber.ErrInternalServerError
-	}
+	pk := config.GetEnv("STRIPE_PUBLISHABLE_KEY")
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"key": pk,
 	})
 }
 
 func Pay(c *fiber.Ctx) error {
-	sk, _ := config.GetEnv("STRIPE_KEY")
+	sk := config.GetEnv("STRIPE_KEY")
 	stripe.Key = sk
 	userId := c.Locals("userId").(float64)
 	orderId := c.Params("id")
@@ -42,8 +41,13 @@ func Pay(c *fiber.Ctx) error {
 		})
 	}
 	var pi *stripe.PaymentIntent
+	var err error
 	if order.PaymentID != "" {
-		pi, _ = paymentintent.Get(order.PaymentID, nil)
+		pi, err = paymentintent.Get(order.PaymentID, nil)
+		if err != nil {
+			log.Fatal(err.Error())
+			return fiber.ErrInternalServerError
+		}
 	} else {
 		params := &stripe.PaymentIntentParams{
 			Amount:   stripe.Int64(int64(order.TotalPrice * 100)),
@@ -53,7 +57,11 @@ func Pay(c *fiber.Ctx) error {
 			},
 			ReceiptEmail: stripe.String(c.Locals("email").(string)),
 		}
-		pi, _ = paymentintent.New(params)
+		pi, err = paymentintent.New(params)
+		if err != nil {
+			log.Fatal(err.Error())
+			return fiber.ErrInternalServerError
+		}
 		order.PaymentID = pi.ID
 		db.Save(order)
 	}
@@ -63,7 +71,7 @@ func Pay(c *fiber.Ctx) error {
 }
 
 func ConfirmPay(c *fiber.Ctx) error {
-	sk, _ := config.GetEnv("STRIPE_KEY")
+	sk := config.GetEnv("STRIPE_KEY")
 	stripe.Key = sk
 	paymentId := c.Params("id")
 	order := new(models.Order)
@@ -74,7 +82,11 @@ func ConfirmPay(c *fiber.Ctx) error {
 			"message": "invalid order",
 		})
 	}
-	pi, _ := paymentintent.Get(paymentId, nil)
+	pi, err := paymentintent.Get(paymentId, nil)
+	if err != nil {
+		log.Fatal(err.Error())
+		return fiber.ErrInternalServerError
+	}
 	if pi.Status != stripe.PaymentIntentStatusSucceeded {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "user did not pay",

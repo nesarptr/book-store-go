@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -13,17 +11,8 @@ import (
 var db *gorm.DB
 
 func Connect() error {
-	HOST, err := GetEnv("HOST")
-	USER, _ := GetEnv("USER")
-	PASSWORD, _ := GetEnv("PASSWORD")
-	DATABASE, _ := GetEnv("DATABASE")
-	PORT, _ := GetEnv("PORT")
-	SSLMODE, _ := GetEnv("SSLMODE")
-	if err != nil {
-		return err
-	}
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", HOST, USER, PASSWORD, DATABASE, PORT, SSLMODE)
-	d, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	pguri := GetEnv("PGURI")
+	d, err := gorm.Open(postgres.Open(pguri), &gorm.Config{})
 	if err != nil {
 		return err
 	}
@@ -35,11 +24,7 @@ func GetDB() *gorm.DB {
 	return db
 }
 
-func GetEnv(key string) (string, error) {
-	err := godotenv.Load("E:\\Projects\\Portfolio-Projects\\book-store-go\\.env")
-	if err != nil {
-		log.Fatal(err)
-		return "", err
-	}
-	return os.Getenv(key), nil
+func GetEnv(key string) string {
+	godotenv.Load("./.env")
+	return os.Getenv(key)
 }

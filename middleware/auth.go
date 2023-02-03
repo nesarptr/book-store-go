@@ -8,12 +8,7 @@ import (
 )
 
 func Protected() []fiber.Handler {
-	secret, err := config.GetEnv("TOKEN_SECRET")
-	if err != nil {
-		return []fiber.Handler{func(c *fiber.Ctx) error {
-			return fiber.ErrInternalServerError
-		}}
-	}
+	secret := config.GetEnv("TOKEN_SECRET")
 	return []fiber.Handler{jwtware.New(jwtware.Config{
 		SigningKey:   []byte(secret),
 		ErrorHandler: jwtError,

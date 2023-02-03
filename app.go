@@ -17,7 +17,13 @@ import (
 
 func main() {
 	if err := os.MkdirAll(filepath.Dir("./images/"), os.ModePerm); err != nil {
-		fmt.Println(err.Error())
+		log.Fatal(err.Error())
+	}
+
+	port := config.GetEnv("PORT")
+
+	if port == "" {
+		port = "4000"
 	}
 
 	app := fiber.New()
@@ -32,13 +38,13 @@ func main() {
 
 	routes.SetUpRoutes(app)
 
-	log.Fatal(app.Listen(":4000"))
+	log.Fatal(app.Listen(":" + port))
 }
 
 func init() {
 	err := config.Connect()
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err.Error())
 	}
 	db := config.GetDB()
 	db.AutoMigrate(&models.User{}, &models.Book{}, &models.Order{}, &models.Cart{}, &models.CartItem{}, &models.OrderItem{})

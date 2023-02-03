@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -18,7 +19,6 @@ func CreateBook(c *fiber.Ctx) error {
 	book.Title = c.FormValue("name")
 	price, err := strconv.ParseFloat(c.FormValue("price"), 32)
 	if err != nil {
-		fmt.Println(book.Title)
 		return fiber.ErrUnprocessableEntity
 	}
 	book.Price = float32(price)
@@ -158,7 +158,7 @@ func UpdateBook(c *fiber.Ctx) error {
 			go utils.RemoveImage(book.ImgUrl, 60, done)
 			err := <-done
 			if err != nil {
-				fmt.Println(err.Error())
+				log.Fatal(err.Error())
 			}
 
 			book.ImgUrl = imgUrl
@@ -197,7 +197,7 @@ func DeleteBook(c *fiber.Ctx) error {
 		go utils.RemoveImage(book.ImgUrl, 60, done)
 		err := <-done
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Fatal(err.Error())
 		}
 		return c.Status(fiber.StatusOK).JSON(book)
 	}

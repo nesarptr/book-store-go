@@ -81,11 +81,7 @@ func SignIn(c *fiber.Ctx) error {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	secret, err := config.GetEnv("TOKEN_SECRET")
-
-	if err != nil {
-		return fiber.ErrInternalServerError
-	}
+	secret := config.GetEnv("TOKEN_SECRET")
 
 	t, err := token.SignedString([]byte(secret))
 
@@ -107,11 +103,7 @@ func Jwt(c *fiber.Ctx) error {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	secret, err := config.GetEnv("TOKEN_SECRET")
-
-	if err != nil {
-		return fiber.ErrInternalServerError
-	}
+	secret := config.GetEnv("TOKEN_SECRET")
 
 	t, err := token.SignedString([]byte(secret))
 
