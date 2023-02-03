@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -17,7 +16,7 @@ import (
 
 func main() {
 	if err := os.MkdirAll(filepath.Dir("./images/"), os.ModePerm); err != nil {
-		log.Fatal(err.Error())
+		fmt.Println(err.Error())
 	}
 
 	port := config.GetEnv("PORT")
@@ -38,13 +37,13 @@ func main() {
 
 	routes.SetUpRoutes(app)
 
-	log.Fatal(app.Listen(":" + port))
+	fmt.Println(app.Listen(":" + port))
 }
 
 func init() {
 	err := config.Connect()
 	if err != nil {
-		log.Fatal(err.Error())
+		fmt.Println(err.Error())
 	}
 	db := config.GetDB()
 	db.AutoMigrate(&models.User{}, &models.Book{}, &models.Order{}, &models.Cart{}, &models.CartItem{}, &models.OrderItem{})

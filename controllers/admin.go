@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -158,7 +157,7 @@ func UpdateBook(c *fiber.Ctx) error {
 			go utils.RemoveImage(book.ImgUrl, 60, done)
 			err := <-done
 			if err != nil {
-				log.Fatal(err.Error())
+				fmt.Println(err.Error())
 			}
 
 			book.ImgUrl = imgUrl
@@ -197,7 +196,7 @@ func DeleteBook(c *fiber.Ctx) error {
 		go utils.RemoveImage(book.ImgUrl, 60, done)
 		err := <-done
 		if err != nil {
-			log.Fatal(err.Error())
+			fmt.Println(err.Error())
 		}
 		return c.Status(fiber.StatusOK).JSON(book)
 	}

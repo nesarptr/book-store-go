@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/nesarptr/book-store-go/config"
@@ -45,7 +45,7 @@ func Pay(c *fiber.Ctx) error {
 	if order.PaymentID != "" {
 		pi, err = paymentintent.Get(order.PaymentID, nil)
 		if err != nil {
-			log.Fatal(err.Error())
+			fmt.Println(err.Error())
 			return fiber.ErrInternalServerError
 		}
 	} else {
@@ -59,7 +59,7 @@ func Pay(c *fiber.Ctx) error {
 		}
 		pi, err = paymentintent.New(params)
 		if err != nil {
-			log.Fatal(err.Error())
+			fmt.Println(err.Error())
 			return fiber.ErrInternalServerError
 		}
 		order.PaymentID = pi.ID
@@ -84,7 +84,7 @@ func ConfirmPay(c *fiber.Ctx) error {
 	}
 	pi, err := paymentintent.Get(paymentId, nil)
 	if err != nil {
-		log.Fatal(err.Error())
+		fmt.Println(err.Error())
 		return fiber.ErrInternalServerError
 	}
 	if pi.Status != stripe.PaymentIntentStatusSucceeded {
