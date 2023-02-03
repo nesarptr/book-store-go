@@ -98,6 +98,7 @@ func ConfirmPay(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "payment successful",
+		"id": order.ID,
 	})
 
 }
